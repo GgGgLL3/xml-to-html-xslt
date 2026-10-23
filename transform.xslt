@@ -2,13 +2,8 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:output method="html" encoding="UTF-8" indent="yes" omit-xml-declaration="yes"/>
 
-  <!-- Key for unique cities -->
   <xsl:key name="cities" match="item" use="@city"/>
-
-  <!-- Key for unique orgs within a city (compound key) -->
   <xsl:key name="orgs-by-city" match="item" use="concat(@city, '|', @org)"/>
-
-  <!-- Key for unique titles within an org within a city (compound key) -->
   <xsl:key name="titles-by-org" match="item" use="concat(@city, '|', @org, '|', @title)"/>
 
   <xsl:template match="/">
@@ -20,19 +15,16 @@
       <body>
         <h1>Города и компании</h1>
         <ul>
-          <!-- Group by unique cities (document order) -->
           <xsl:for-each select="orgs/item[generate-id() = generate-id(key('cities', @city)[1])]">
             <li>
               <h3><xsl:value-of select="@city"/></h3>
               <p>Всего товаров: <xsl:value-of select="count(key('cities', @city))"/></p>
-              <!-- Group by unique orgs within this city (document order) -->
               <xsl:for-each select="key('cities', @city)[generate-id() = generate-id(key('orgs-by-city', concat(@city, '|', @org))[1])]">
                 <ul>
                   <li>
                     <h4><xsl:value-of select="@org"/></h4>
                     <p>Всего товаров: <xsl:value-of select="count(key('orgs-by-city', concat(@city, '|', @org)))"/></p>
                     <ul>
-                      <!-- Unique titles within this org, sorted by title -->
                       <xsl:for-each select="key('orgs-by-city', concat(@city, '|', @org))[generate-id() = generate-id(key('titles-by-org', concat(@city, '|', @org, '|', @title))[1])]">
                         <xsl:sort select="@title"/>
                         <li><xsl:value-of select="@title"/></li>
